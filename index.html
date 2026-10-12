@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cierre en Sitio – Prototipo v0.1 de levantamiento arquitectónico</title>
+<style>
+:root{--bg:#eef1f2;--card:#fff;--ink:#16252d;--mut:#5b6b73;--line:#cdd6da;--acc:#f2b705;--ok:#1f8a4c;--warn:#c27a00;--bad:#c0392b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Segoe UI",system-ui,sans-serif}
+header{background:var(--ink);color:#fff;padding:20px 16px 0}
+header h1{margin:0;font-size:1.4rem}header p{margin:4px 0 14px;color:#b9c6cc;font-size:.92rem}
+nav{display:flex;gap:4px;max-width:900px;margin:auto}
+nav button{flex:1;background:#24363f;color:#cfdbe0;border:0;padding:12px;font:inherit;cursor:pointer;border-radius:8px 8px 0 0}
+nav button.on{background:var(--bg);color:var(--ink);font-weight:600}
+main{max-width:900px;margin:auto;padding:16px}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
+h2{font-size:1.2rem;margin:0 0 8px}h3{font-size:1rem;margin:14px 0 6px}
+.quote{border-left:5px solid var(--acc);padding-left:12px;color:var(--ink)}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+.scroll{overflow-x:auto}
+label{display:block;font-size:.85rem;color:var(--mut);margin:8px 0 2px}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
+input:focus,select:focus,button:focus-visible,textarea:focus{outline:3px solid var(--acc);outline-offset:1px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.btn{background:var(--ink);color:#fff;border:0;border-radius:8px;padding:11px 16px;font:inherit;cursor:pointer}
+.btn.acc{background:var(--acc);color:var(--ink);font-weight:600}.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.chip{padding:8px 12px;border:1px solid var(--line);border-radius:20px;background:#fff;cursor:pointer;font:inherit}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.st{display:inline-block;padding:2px 10px;border-radius:12px;font-size:.8rem;font-weight:600;color:#fff}
+.st.ok{background:var(--ok)}.st.rev{background:var(--warn)}.st.bad{background:var(--bad)}
+.wall{border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0;background:#fafcfc}
+.wall header{all:unset;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;font-weight:600}
+.msg{font-size:.88rem;margin-top:6px}.msg.bad{color:var(--bad)}.msg.rev{color:var(--warn)}.msg.ok{color:var(--ok)}
+.bar{height:14px;background:#dfe6e9;border-radius:8px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ok);transition:width .3s}
+.photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:10px}
+.photos figure{margin:0;font-size:.78rem}.photos img{width:100%;height:90px;object-fit:cover;border-radius:6px}
+svg{width:100%;max-width:340px;display:block;margin:8px auto}
+ul{padding-left:20px;margin:6px 0}
+.hide{display:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div style="max-width:900px;margin:auto">
+    <h1>Cierre en Sitio</h1>
+    <p>Registro y verificación de levantamientos arquitectónicos antes de salir de la obra · Prototipo v0.1</p>
+    <nav role="tablist">
+      <button class="on" data-tab="propuesta">Propuesta de valor</button>
+      <button data-tab="prototipo">Prototipo</button>
+      <button data-tab="mejora">Pruebas y mejora</button>
+    </nav>
+  </div>
+</header>
+<main>
+
+<section id="propuesta" class="on">
+  <div class="card">
+    <h2>El problema</h2>
+    <p>Arquitectos independientes y pequeños despachos de la Riviera Maya levantan viviendas existentes con libreta, flexómetro y fotos del celular. Antes de irse de la obra solo revisan a ojo que hayan pasado por todas las habitaciones. Las medidas que faltan aparecen días después, al dibujar en AutoCAD, y corregirlas implica regresar a la obra o inferir cotas con riesgo de error.</p>
+  </div>
+  <div class="card">
+    <h2>Declaración de propuesta de valor</h2>
+    <p class="quote">Para arquitectos independientes y pequeños despachos de la Riviera Maya que necesitan levantamientos confiables en viviendas existentes, proponemos un sistema digital de registro estructurado y verificación en sitio que valida la coherencia geométrica y asocia cada fotografía a su elemento antes de abandonar la obra, a diferencia de la libreta de campo con carpetas de fotos desarticuladas.</p>
+  </div>
+  <div class="card">
+    <h2>Mapa de valor</h2>
+    <div class="scroll"><table>
+      <tr><th>Frustración del usuario</th><th>Cómo la atiende el prototipo</th></tr>
+      <tr><td>Descubrir cotas faltantes hasta dibujar en AutoCAD</td><td>Alerta si la suma de cotas parciales no coincide con la cota total y exige espesor y altura de cada muro.</td></tr>
+      <tr><td>Fotos sueltas sin saber a qué muro pertenecen</td><td>Cada foto se vincula a un nodo del croquis (muro) en el momento de capturarla.</td></tr>
+      <tr><td>Retrabajo y traslados extra por una medida olvidada</td><td>El recinto solo se cierra cuando todo está completo; se muestra % de completitud y pendientes.</td></tr>
+    </table></div>
+  </div>
+  <div class="card">
+    <h2>Pantallas del prototipo v0.1</h2>
+    <div class="scroll"><table>
+      <tr><th>Pantalla</th><th>Elementos</th><th>Qué se busca probar</th></tr>
+      <tr><td>1. Nuevo levantamiento</td><td>Proyecto, inmueble, fecha</td><td>Que el flujo se entienda sin explicación extensa</td></tr>
+      <tr><td>2. Recinto</td><td>Nombre y croquis esquemático</td><td>Que ubique el espacio y empiece a medir</td></tr>
+      <tr><td>3. Cotas</td><td>Total, parciales, espesor, altura</td><td>Que entienda qué datos son indispensables</td></tr>
+      <tr><td>4. Validación</td><td>OK / revisar / diferencia</td><td>Que vea las inconsistencias antes de salir</td></tr>
+      <tr><td>5. Fotografía</td><td>Foto, nodo, nota</td><td>Que la foto quede ligada al elemento espacial</td></tr>
+      <tr><td>6. Cierre</td><td>% completitud, pendientes</td><td>Que decida si la información está lista para gabinete</td></tr>
+    </table></div>
+  </div>
+  <p><button class="btn acc" data-go="prototipo">Probar el prototipo</button></p>
+</section>
+
+<section id="prototipo">
+  <div class="card" id="s1">
+    <h2>1. Nuevo levantamiento</h2>
+    <div class="row">
+      <div><label for="pNombre">Proyecto</label><input id="pNombre" placeholder="Ej. Remodelación casa García"></div>
+      <div><label for="pInm">Inmueble / dirección</label><input id="pInm" placeholder="Ej. Calle 10, Playa del Carmen"></div>
+      <div><label for="pFecha">Fecha</label><input id="pFecha" type="date"></div>
+    </div>
+    <div class="row">
+      <div><label for="tol">Tolerancia de cierre (m)</label><input id="tol" type="number" step="0.01" min="0" value="0.02"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>2. Recintos</h2>
+    <div class="row">
+      <div><label for="rNombre">Nombre del recinto</label><input id="rNombre" placeholder="Ej. Sala-comedor"></div>
+      <div style="align-self:end"><button class="btn" id="addR">Agregar recinto</button></div>
+    </div>
+    <div class="chips" id="chips" role="list"></div>
+    <p class="msg" id="emptyR">Agrega tu primer recinto para empezar a registrar medidas.</p>
+  </div>
+
+  <div id="rec" class="hide">
+    <div class="card">
+      <h2 id="recT"></h2>
+      <p style="color:var(--mut);font-size:.9rem;margin:0">Planta esquemática (recinto rectangular). Cada muro cambia de color según su estado.</p>
+      <svg viewBox="0 0 340 220" id="plan" role="img" aria-label="Croquis esquemático del recinto"></svg>
+    </div>
+
+    <div class="card">
+      <h2>3 y 4. Cotas y validación</h2>
+      <p style="color:var(--mut);font-size:.9rem;margin:0">Captura en metros. En parciales escribe las cotas separadas por coma (vanos y macizos, en orden).</p>
+      <div id="walls"></div>
+      <div id="closure"></div>
+    </div>
+
+    <div class="card">
+      <h2>5. Fotografía vinculada</h2>
+      <div class="row">
+        <div><label for="fNodo">Muro / nodo</label><select id="fNodo"></select></div>
+        <div><label for="fNota">Nota breve</label><input id="fNota" placeholder="Ej. Remate de puerta"></div>
+        <div><label for="fFile">Foto</label><input id="fFile" type="file" accept="image/*" capture="environment"></div>
+      </div>
+      <div class="photos" id="photos"></div>
+    </div>
+
+    <div class="card">
+      <h2>6. Cierre del recinto</h2>
+      <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="barW"><i id="bar"></i></div>
+      <p><strong id="pct">0%</strong> de completitud</p>
+      <div id="pend"></div>
+      <p><button class="btn acc" id="close">Cerrar recinto</button> <button class="btn ghost" id="csv">Exportar CSV</button> <button class="btn ghost" id="reset">Borrar todo</button></p>
+      <p class="msg" id="closeMsg"></p>
+    </div>
+  </div>
+</section>
+
+<section id="mejora">
+  <div class="card">
+    <h2>Plan priorizado de mejora (hipótesis inicial)</h2>
+    <p style="color:var(--mut)">Cada fila debe confirmarse o cambiarse con la evidencia de las pruebas reales con usuarios; todavía no son resultados comprobados.</p>
+    <div class="scroll"><table>
+      <tr><th>#</th><th>Acción</th><th>Qué se cambiará</th><th>Mejora esperada</th></tr>
+      <tr><td>1</td><td>Mantener</td><td>Validación de cierre dimensional</td><td>Detectar inconsistencias antes de terminar</td></tr>
+      <tr><td>2</td><td>Modificar</td><td>Simplificar el registro de cotas y diferenciar total de parciales</td><td>Reducir errores de captura</td></tr>
+      <tr><td>3</td><td>Modificar</td><td>Hacer más visible la relación foto–nodo</td><td>Mejorar la recuperación de evidencia</td></tr>
+      <tr><td>4</td><td>Modificar</td><td>Mostrar pendientes concretos en el indicador de completitud</td><td>Facilitar decisiones de cierre</td></tr>
+      <tr><td>5</td><td>Eliminar</td><td>Funciones no indispensables para probar la propuesta en v0.1</td><td>Mantener el prototipo enfocado</td></tr>
+    </table></div>
+  </div>
+  <div class="card">
+    <h2>Registro de revisión entre pares y pruebas con usuarios</h2>
+    <p style="color:var(--mut);font-size:.9rem">Llena un registro por persona, justo después de la sesión y solo con lo que realmente pasó. C01 y C02 son compañeros; P01 a P03 son usuarios reales (arquitectos). Se guarda en este dispositivo.</p>
+    <div class="row">
+      <div><label for="gCod">Código</label><select id="gCod"><option>C01</option><option>C02</option><option>P01</option><option>P02</option><option>P03</option><option>P04</option><option>P05</option></select></div>
+      <div><label for="gFecha">Fecha</label><input id="gFecha" type="date"></div>
+      <div><label for="gVer">Versión probada</label><input id="gVer" value="v0.1"></div>
+    </div>
+    <label for="gPerfil">Perfil de la persona (ej. arquitecto independiente, compañero de clase)</label><input id="gPerfil">
+    <label for="gTarea">Tarea</label><input id="gTarea" value="Registrar medidas de un recinto, validar el cierre y asociar una fotografía.">
+    <label for="gCond">Conducta observada: qué hizo, en qué orden y dónde dudó</label><textarea id="gCond" rows="3"></textarea>
+    <label for="gDijo">Lo que dijo (frases textuales)</label><textarea id="gDijo" rows="2"></textarea>
+    <label for="gDif">Dificultades: dónde pidió ayuda, se equivocó o abandonó</label><textarea id="gDif" rows="2"></textarea>
+    <label for="gVal">Aspectos valorados: qué usó o señaló como útil y por qué</label><textarea id="gVal" rows="2"></textarea>
+    <label for="gEv">Evidencia (código y tipo, ej. E01 – captura de pantalla)</label><input id="gEv">
+    <label for="gCam">Cambio hecho después de esta sesión (si aplica)</label><input id="gCam">
+    <p><button class="btn acc" id="gSave">Guardar registro</button> <button class="btn ghost" id="gCopy">Copiar todos los registros</button></p>
+    <p class="msg" id="gMsg"></p>
+    <div id="regList"></div>
+  </div>
+</section>
+
+</main>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const KEY="cierre_en_sitio_v01",SIDES={N:"Muro norte",E:"Muro este",S:"Muro sur",O:"Muro oeste"};
+let S={p:{n:"",i:"",f:"",tol:0.02},r:[],cur:null,reg:[]};
+try{const x=localStorage.getItem(KEY);if(x)S=Object.assign(S,JSON.parse(x))}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){alert("No se pudo guardar: la memoria del navegador está llena (quita fotos).")}};
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num=v=>{const n=parseFloat(String(v).replace(",","."));return isNaN(n)?null:n};
+const parts=v=>String(v||"").split(/[,;\s]+/).map(num).filter(n=>n!==null);
+
+function wallState(m,fotos){
+  const t=num(m.total),p=parts(m.parc),sum=p.reduce((a,b)=>a+b,0),tol=S.p.tol,iss=[];
+  let st="ok",msg="Las cotas cierran.";
+  if(t===null){st="bad";msg="Falta la cota total.";iss.push("total")}
+  else if(!p.length){st="rev";msg="Agrega las cotas parciales para comprobar el cierre.";iss.push("parciales")}
+  else{const d=sum-t;if(Math.abs(d)>tol){st="bad";msg="Diferencia detectada: las parciales suman "+sum.toFixed(2)+" m y la total es "+t.toFixed(2)+" m ("+(d>0?"+":"")+d.toFixed(2)+" m).";iss.push("cierre")}}
+  if(num(m.esp)===null)iss.push("espesor");
+  if(num(m.alt)===null)iss.push("altura");
+  if(!fotos)iss.push("foto");
+  if(st==="ok"&&(iss.includes("espesor")||iss.includes("altura"))){st="rev";msg="Falta registrar "+iss.filter(x=>x==="espesor"||x==="altura").join(" y ")+" del muro."}
+  return{st,msg,iss,t,sum};
+}
+function cur(){return S.r.find(x=>x.id===S.cur)}
+function analyze(r){
+  const w={};let ok=0,pend=[];const tot=22;
+  Object.keys(SIDES).forEach(k=>{
+    const f=r.fotos.filter(x=>x.nodo===k).length,s=wallState(r.m[k],f);w[k]=s;
+    ["total","cierre","espesor","altura","foto"].forEach(c=>{
+      if(s.iss.includes(c)||(c==="cierre"&&s.iss.includes("parciales")))pend.push(SIDES[k]+": "+({total:"cota total",cierre:s.iss.includes("parciales")?"cotas parciales":"cierre de cotas",espesor:"espesor",altura:"altura",foto:"al menos una foto"})[c]);else ok++});
+  });
+  const pair=(a,b,n)=>{const x=w[a].t,y=w[b].t;if(x===null||y===null){pend.push("Cierre del polígono: falta "+n);return"bad"}
+    if(Math.abs(x-y)>S.p.tol){pend.push("Cierre del polígono: "+n+" no coincide ("+x.toFixed(2)+" vs "+y.toFixed(2)+" m)");return"bad"}ok++;return"ok"};
+  const c1=pair("N","S","norte–sur"),c2=pair("E","O","este–oeste");
+  return{w,pct:Math.round(ok/tot*100),pend,c1,c2};
+}
+const colors={ok:"#1f8a4c",rev:"#c27a00",bad:"#c0392b"};
+function render(){
+  renderReg();
+  $("#pNombre").value=S.p.n;$("#pInm").value=S.p.i;$("#pFecha").value=S.p.f;$("#tol").value=S.p.tol;
+  $("#chips").innerHTML=S.r.map(r=>`<button class="chip ${r.id===S.cur?"on":""}" data-id="${r.id}">${esc(r.nombre)}${r.cerrado?" ✔":""}</button>`).join("");
+  $("#emptyR").classList.toggle("hide",S.r.length>0);
+  const r=cur();$("#rec").classList.toggle("hide",!r);if(!r)return;
+  const a=analyze(r);
+  $("#recT").textContent=r.nombre+(r.cerrado?" (cerrado)":"");
+  const pos={N:[70,30,200,0],S:[70,190,200,0],O:[40,50,0,120],E:[300,50,0,120]};
+  $("#plan").innerHTML=Object.keys(SIDES).map(k=>{const [x,y,w,h]=pos[k],c=colors[a.w[k].st],n=r.fotos.filter(f=>f.nodo===k).length;
+    const rect=w?`<rect x="${x}" y="${y-6}" width="${w}" height="12" rx="3" fill="${c}"/>`:`<rect x="${x-6}" y="${y}" width="12" height="${h}" rx="3" fill="${c}"/>`;
+    const tx=w?x+w/2:(k==="O"?x-22:x+22),ty=w?(k==="N"?y-14:y+26):y+h/2+4;
+    return rect+`<text x="${tx}" y="${ty}" text-anchor="middle" font-size="13" fill="#16252d">${k} ${a.w[k].t!==null?a.w[k].t.toFixed(2)+" m":""}${n?" 📷"+n:""}</text>`}).join("")+
+    `<text x="170" y="115" text-anchor="middle" font-size="14" fill="#5b6b73">${esc(r.nombre)}</text>`;
+  const lbl={ok:"OK",rev:"Revisar",bad:"Diferencia"};
+  $("#walls").innerHTML=Object.keys(SIDES).map(k=>{const m=r.m[k],s=a.w[k];
+    return`<div class="wall"><header><span>${SIDES[k]}</span><span class="st ${s.st}">${lbl[s.st]}</span></header>
+    <div class="row"><div><label>Cota total (m)</label><input data-k="${k}" data-f="total" inputmode="decimal" value="${esc(m.total)}"></div>
+    <div><label>Cotas parciales (m)</label><input data-k="${k}" data-f="parc" placeholder="1.20, 0.90, 1.50" value="${esc(m.parc)}"></div>
+    <div><label>Espesor (m)</label><input data-k="${k}" data-f="esp" inputmode="decimal" value="${esc(m.esp)}"></div>
+    <div><label>Altura (m)</label><input data-k="${k}" data-f="alt" inputmode="decimal" value="${esc(m.alt)}"></div></div>
+    <div class="msg ${s.st==="ok"?"ok":s.st}">${esc(s.msg)}</div></div>`}).join("");
+  $("#closure").innerHTML=`<p class="msg ${a.c1==="ok"&&a.c2==="ok"?"ok":"rev"}">Cierre del polígono: norte–sur ${a.c1==="ok"?"coincide":"pendiente o no coincide"}; este–oeste ${a.c2==="ok"?"coincide":"pendiente o no coincide"}.</p>`;
+  $("#fNodo").innerHTML=Object.keys(SIDES).map(k=>`<option value="${k}">${SIDES[k]}</option>`).join("");
+  $("#photos").innerHTML=r.fotos.map((f,i)=>`<figure><img src="${f.src}" alt="Foto ${SIDES[f.nodo]}"><figcaption>${SIDES[f.nodo]}${f.nota?" – "+esc(f.nota):""}<br><button class="btn ghost" data-del="${i}" style="padding:2px 8px;font-size:.75rem">Quitar</button></figcaption></figure>`).join("");
+  $("#bar").style.width=a.pct+"%";$("#barW").setAttribute("aria-valuenow",a.pct);$("#pct").textContent=a.pct+"%";
+  $("#pend").innerHTML=a.pend.length?"<strong>Pendientes ("+a.pend.length+"):</strong><ul>"+a.pend.map(p=>"<li>"+esc(p)+"</li>").join("")+"</ul>":'<p class="msg ok">Todo completo. Ya puedes cerrar el recinto y salir de la obra.</p>';
+  $("#close").disabled=a.pct<100||r.cerrado;
+  $("#closeMsg").textContent=r.cerrado?"Recinto cerrado. La información está lista para gabinete.":(a.pct<100?"El recinto se habilita para cierre al llegar a 100%.":"");
+}
+// eventos
+$$("nav button").forEach(b=>b.onclick=()=>tab(b.dataset.tab));
+$$("[data-go]").forEach(b=>b.onclick=()=>tab(b.dataset.go));
+function tab(t){$$("section").forEach(s=>s.classList.toggle("on",s.id===t));$$("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t));window.scrollTo(0,0)}
+[["#pNombre","n"],["#pInm","i"],["#pFecha","f"]].forEach(([s,k])=>$(s).onchange=e=>{S.p[k]=e.target.value;save()});
+$("#tol").onchange=e=>{S.p.tol=Math.max(0,num(e.target.value)||0.02);save();render()};
+$("#addR").onclick=()=>{const n=$("#rNombre").value.trim();if(!n){$("#rNombre").focus();return}
+  const id="r"+Date.now();S.r.push({id,nombre:n,m:{N:{},E:{},S:{},O:{}},fotos:[],cerrado:false});S.cur=id;$("#rNombre").value="";save();render()};
+$("#chips").onclick=e=>{const b=e.target.closest("[data-id]");if(b){S.cur=b.dataset.id;save();render()}};
+$("#walls").onchange=e=>{const i=e.target;if(!i.dataset.k)return;const r=cur();r.m[i.dataset.k][i.dataset.f]=i.value;r.cerrado=false;save();render()};
+$("#fFile").onchange=e=>{const f=e.target.files[0],r=cur();if(!f||!r)return;
+  const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,640/im.width),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;
+    c.getContext("2d").drawImage(im,0,0,c.width,c.height);r.fotos.push({nodo:$("#fNodo").value,nota:$("#fNota").value.trim(),src:c.toDataURL("image/jpeg",.7)});
+    $("#fNota").value="";$("#fFile").value="";r.cerrado=false;save();render()};im.src=rd.result};rd.readAsDataURL(f)};
+$("#photos").onclick=e=>{const b=e.target.closest("[data-del]");if(b){cur().fotos.splice(+b.dataset.del,1);save();render()}};
+$("#close").onclick=()=>{cur().cerrado=true;save();render()};
+$("#reset").onclick=()=>{if(confirm("¿Borrar todo el levantamiento de este dispositivo?")){S={p:{n:"",i:"",f:"",tol:0.02},r:[],cur:null,reg:S.reg||[]};save();render()}};
+$("#csv").onclick=()=>{const L=[["Proyecto","Recinto","Muro","Total_m","Parciales_m","Suma_m","Espesor_m","Altura_m","Estado","Fotos"]];
+  S.r.forEach(r=>{const a=analyze(r);Object.keys(SIDES).forEach(k=>{const m=r.m[k],s=a.w[k];L.push([S.p.n,r.nombre,SIDES[k],m.total||"",m.parc||"",s.sum.toFixed(2),m.esp||"",m.alt||"",s.st,r.fotos.filter(f=>f.nodo===k).length])})});
+  const t=L.map(l=>l.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\n"),a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob(["\ufeff"+t],{type:"text/csv"}));a.download="levantamiento.csv";a.click()};
+// registros de pruebas
+const GF={cod:"gCod",fecha:"gFecha",ver:"gVer",perfil:"gPerfil",tarea:"gTarea",cond:"gCond",dijo:"gDijo",dif:"gDif",val:"gVal",ev:"gEv",cam:"gCam"};
+const GL={perfil:"Perfil",fecha:"Fecha",ver:"Versión",tarea:"Tarea",cond:"Conducta observada",dijo:"Lo que dijo",dif:"Dificultades",val:"Aspectos valorados",ev:"Evidencia",cam:"Cambio de versión"};
+function renderReg(){const L=(S.reg||[]).slice().sort((a,b)=>a.cod.localeCompare(b.cod));
+  $("#regList").innerHTML=L.length?"<h3>Registros guardados ("+L.length+")</h3>"+L.map(g=>`<div class="wall"><header><span>${esc(g.cod)} · ${esc(g.fecha||"sin fecha")} · ${esc(g.ver||"")}</span><span><button class="btn ghost" data-ed="${g.cod}" style="padding:2px 10px">Editar</button> <button class="btn ghost" data-rm="${g.cod}" style="padding:2px 10px">Quitar</button></span></header><div style="font-size:.9rem">${["perfil","cond","dijo","dif","val","ev","cam"].filter(k=>g[k]).map(k=>"<b>"+GL[k]+":</b> "+esc(g[k])).join("<br>")}</div></div>`).join(""):"<p class='msg'>Aún no hay registros. Se llenan después de cada sesión real.</p>"}
+$("#gSave").onclick=()=>{const g={};for(const k in GF)g[k]=$("#"+GF[k]).value.trim();
+  if(!g.fecha||!g.cond){$("#gMsg").className="msg bad";$("#gMsg").textContent="Falta la fecha y la conducta observada: sin eso el registro no sirve como evidencia.";return}
+  S.reg=(S.reg||[]).filter(x=>x.cod!==g.cod);S.reg.push(g);save();renderReg();
+  for(const k of ["fecha","perfil","cond","dijo","dif","val","ev","cam"])$("#"+GF[k]).value="";
+  const o=[...$("#gCod").options].map(x=>x.value),i=o.indexOf(g.cod);if(i<o.length-1)$("#gCod").value=o[i+1];
+  $("#gMsg").className="msg ok";$("#gMsg").textContent="Registro "+g.cod+" guardado."};
+$("#regList").onclick=e=>{const d=e.target.closest("[data-ed]"),r=e.target.closest("[data-rm]");
+  if(d){const g=S.reg.find(x=>x.cod===d.dataset.ed);for(const k in GF)$("#"+GF[k]).value=g[k]||"";window.scrollTo(0,$("#gCod").offsetTop-80)}
+  if(r&&confirm("¿Quitar el registro "+r.dataset.rm+"?")){S.reg=S.reg.filter(x=>x.cod!==r.dataset.rm);save();renderReg()}};
+$("#gCopy").onclick=()=>{const t=(S.reg||[]).slice().sort((a,b)=>a.cod.localeCompare(b.cod)).map(g=>g.cod+"\n"+Object.keys(GL).map(k=>GL[k]+": "+(g[k]||"—")).join("\n")).join("\n\n");
+  if(!t){$("#gMsg").className="msg bad";$("#gMsg").textContent="No hay registros para copiar.";return}
+  (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{$("#gMsg").className="msg ok";$("#gMsg").textContent="Copiado. Pégalo en tu documento de Word."}).catch(()=>{$("#gMsg").className="msg rev";$("#gMsg").textContent="No se pudo copiar automáticamente; selecciona el texto de los registros y cópialo a mano."})};
+render();
+</script>
+</body>
+</html>
