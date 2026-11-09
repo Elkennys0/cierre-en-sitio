@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cierre en Sitio – Prototipo v0.1 de levantamiento arquitectónico</title>
+<title>Cierre en Sitio – V1.0 primera versión funcional</title>
 <style>
 :root{--bg:#eef1f2;--card:#fff;--ink:#16252d;--mut:#5b6b73;--line:#cdd6da;--acc:#f2b705;--ok:#1f8a4c;--warn:#c27a00;--bad:#c0392b}
 *{box-sizing:border-box}
@@ -49,7 +49,7 @@ ul{padding-left:20px;margin:6px 0}
 <header>
   <div style="max-width:900px;margin:auto">
     <h1>Cierre en Sitio</h1>
-    <p>Registro y verificación de levantamientos arquitectónicos antes de salir de la obra · Prototipo v0.1</p>
+    <p>Registro y verificación de levantamientos arquitectónicos antes de salir de la obra · V1.0 primera versión funcional</p>
     <nav role="tablist">
       <button class="on" data-tab="propuesta">Propuesta de valor</button>
       <button data-tab="prototipo">Prototipo</button>
@@ -102,6 +102,10 @@ ul{padding-left:20px;margin:6px 0}
     </div>
     <div class="row">
       <div><label for="tol">Tolerancia de cierre (m)</label><input id="tol" type="number" step="0.01" min="0" value="0.02"></div>
+      <div><label for="norte">Norte de referencia (ej. fachada hacia la calle)</label><input id="norte" placeholder="Ej. la calle está al norte"></div>
+    </div>
+    <p class="msg" style="color:var(--mut)">La tolerancia es la diferencia máxima, en metros, que aceptas entre la suma de las parciales y la cota total (0.02 = 2 cm). Ejemplo: total 4.00 y parciales que suman 3.99 se aceptan; si suman 3.95 se marca una diferencia. No mide qué tan exacta fue tu medición real, solo si tus números son coherentes entre sí.</p>
+    <div class="row" style="display:none">
     </div>
   </div>
 
@@ -112,6 +116,7 @@ ul{padding-left:20px;margin:6px 0}
       <div style="align-self:end"><button class="btn" id="addR">Agregar recinto</button></div>
     </div>
     <div class="chips" id="chips" role="list"></div>
+    <div class="chips"><span style="align-self:center;font-size:.85rem;color:var(--mut)">Casos de prueba técnica:</span><button class="chip" data-caso="A">A · discrepancia</button><button class="chip" data-caso="B">B · falta espesor</button><button class="chip" data-caso="C">C · ceros y vano abierto</button></div>
     <p class="msg" id="emptyR">Agrega tu primer recinto para empezar a registrar medidas.</p>
   </div>
 
@@ -120,6 +125,7 @@ ul{padding-left:20px;margin:6px 0}
       <h2 id="recT"></h2>
       <p style="color:var(--mut);font-size:.9rem;margin:0">Planta esquemática (recinto rectangular). Cada muro cambia de color según su estado.</p>
       <svg viewBox="0 0 340 220" id="plan" role="img" aria-label="Croquis esquemático del recinto"></svg>
+      <div class="row"><div><label for="swA">Corregir orientación: lo que capturé en</label><select id="swA"></select></div><div><label for="swB">en realidad es del</label><select id="swB"></select></div><div style="align-self:end"><button class="btn ghost" id="swBtn">Intercambiar sin perder datos</button></div></div>
     </div>
 
     <div class="card">
@@ -127,6 +133,22 @@ ul{padding-left:20px;margin:6px 0}
       <p style="color:var(--mut);font-size:.9rem;margin:0">Captura en metros. En parciales escribe las cotas separadas por coma (vanos y macizos, en orden).</p>
       <div id="walls"></div>
       <div id="closure"></div>
+    </div>
+
+    <div class="card">
+      <h2>Puertas y ventanas (vanos)</h2>
+      <p style="color:var(--mut);font-size:.9rem;margin:0">Opcional. Cada puerta o ventana queda ligada a su muro. Posición = distancia desde la esquina donde empiezas a medir ese muro.</p>
+      <div class="row">
+        <div><label for="vMuro">Muro</label><select id="vMuro"></select></div>
+        <div><label for="vTipo">Tipo</label><select id="vTipo"><option>Puerta</option><option>Ventana</option></select></div>
+        <div><label for="vPos">Posición (m)</label><input id="vPos" inputmode="decimal"></div>
+        <div><label for="vAn">Ancho (m)</label><input id="vAn" inputmode="decimal"></div>
+        <div><label for="vAl">Altura (m)</label><input id="vAl" inputmode="decimal"></div>
+        <div><label for="vAnt">Antepecho (m, ventanas)</label><input id="vAnt" inputmode="decimal"></div>
+      </div>
+      <p><button class="btn" id="vAdd">Agregar vano</button></p>
+      <p class="msg" id="vMsg"></p>
+      <div id="vList"></div>
     </div>
 
     <div class="card">
@@ -169,7 +191,7 @@ ul{padding-left:20px;margin:6px 0}
     <div class="row">
       <div><label for="gCod">Código</label><select id="gCod"><option>C01</option><option>C02</option><option>P01</option><option>P02</option><option>P03</option><option>P04</option><option>P05</option></select></div>
       <div><label for="gFecha">Fecha</label><input id="gFecha" type="date"></div>
-      <div><label for="gVer">Versión probada</label><input id="gVer" value="v0.1"></div>
+      <div><label for="gVer">Versión probada</label><input id="gVer" value="V1.0"></div>
     </div>
     <label for="gPerfil">Perfil de la persona (ej. arquitecto independiente, compañero de clase)</label><input id="gPerfil">
     <label for="gTarea">Tarea</label><input id="gTarea" value="Registrar medidas de un recinto, validar el cierre y asociar una fotografía.">
@@ -197,16 +219,20 @@ const num=v=>{const n=parseFloat(String(v).replace(",","."));return isNaN(n)?nul
 const parts=v=>String(v||"").split(/[,;\s]+/).map(num).filter(n=>n!==null);
 
 function wallState(m,fotos){
-  const t=num(m.total),p=parts(m.parc),sum=p.reduce((a,b)=>a+b,0),tol=S.p.tol,iss=[];
+  if(m.abierto){const n=(m.nota||"").trim();return{st:n?"ok":"rev",msg:n?"Lado documentado como vano abierto (sin muro): "+n:"Explica en la nota por qué no hay muro en este lado.",iss:n?[]:["nota"],t:null,sum:0,ab:true,cap:!!n,con:!!n,suf:!!n}}
+  const t=num(m.total),p=parts(m.parc),sum=p.reduce((x,y)=>x+y,0),tol=S.p.tol,iss=[],e=num(m.esp),h=num(m.alt);
   let st="ok",msg="Las cotas cierran.";
-  if(t===null){st="bad";msg="Falta la cota total.";iss.push("total")}
+  if(t===null){st="bad";msg="Dato ausente: falta la cota total.";iss.push("total")}
+  else if(t<=0){st="bad";msg="Un cero no es una medición. Escribe la medida real o marca el lado como vano abierto.";iss.push("total")}
   else if(!p.length){st="rev";msg="Agrega las cotas parciales para comprobar el cierre.";iss.push("parciales")}
+  else if(p.some(x=>x<=0)){st="bad";msg="Hay un parcial en cero o negativo: revisa el tramo.";iss.push("cierre")}
   else{const d=sum-t;if(Math.abs(d)>tol){st="bad";msg="Diferencia detectada: las parciales suman "+sum.toFixed(2)+" m y la total es "+t.toFixed(2)+" m ("+(d>0?"+":"")+d.toFixed(2)+" m).";iss.push("cierre")}}
-  if(num(m.esp)===null)iss.push("espesor");
-  if(num(m.alt)===null)iss.push("altura");
+  if(!(e>0))iss.push("espesor");
+  if(!(h>0))iss.push("altura");
   if(!fotos)iss.push("foto");
-  if(st==="ok"&&(iss.includes("espesor")||iss.includes("altura"))){st="rev";msg="Falta registrar "+iss.filter(x=>x==="espesor"||x==="altura").join(" y ")+" del muro."}
-  return{st,msg,iss,t,sum};
+  if(st==="ok"&&(iss.includes("espesor")||iss.includes("altura"))){st="rev";msg="Las cotas coinciden, pero falta registrar "+iss.filter(x=>x==="espesor"||x==="altura").join(" y ")+" del muro."}
+  const cap=t!==null&&p.length>0&&e!==null&&h!==null,con=t>0&&p.length>0&&!iss.includes("cierre")&&!iss.includes("total")&&!iss.includes("parciales");
+  return{st,msg,iss,t,sum,ab:false,cap,con,suf:iss.length===0};
 }
 function cur(){return S.r.find(x=>x.id===S.cur)}
 function analyze(r){
@@ -214,17 +240,19 @@ function analyze(r){
   Object.keys(SIDES).forEach(k=>{
     const f=r.fotos.filter(x=>x.nodo===k).length,s=wallState(r.m[k],f);w[k]=s;
     ["total","cierre","espesor","altura","foto"].forEach(c=>{
-      if(s.iss.includes(c)||(c==="cierre"&&s.iss.includes("parciales")))pend.push(SIDES[k]+": "+({total:"cota total",cierre:s.iss.includes("parciales")?"cotas parciales":"cierre de cotas",espesor:"espesor",altura:"altura",foto:"al menos una foto"})[c]);else ok++});
+      const nota=c==="total"&&s.iss.includes("nota");
+      if(s.iss.includes(c)||(c==="cierre"&&s.iss.includes("parciales"))||nota)pend.push(SIDES[k]+": "+(nota?"nota que explique el vano abierto":({total:"cota total",cierre:s.iss.includes("parciales")?"cotas parciales":"cierre de cotas",espesor:"espesor",altura:"altura",foto:"al menos una foto"})[c]));else ok++});
   });
-  const pair=(a,b,n)=>{const x=w[a].t,y=w[b].t;if(x===null||y===null){pend.push("Cierre del polígono: falta "+n);return"bad"}
+  const pair=(a,b,n)=>{const A=w[a],B=w[b];if(A.ab||B.ab){ok++;return"ok"}const x=A.t,y=B.t;if(x===null||y===null){pend.push("Cierre del polígono: falta "+n);return"bad"}
     if(Math.abs(x-y)>S.p.tol){pend.push("Cierre del polígono: "+n+" no coincide ("+x.toFixed(2)+" vs "+y.toFixed(2)+" m)");return"bad"}ok++;return"ok"};
   const c1=pair("N","S","norte–sur"),c2=pair("E","O","este–oeste");
+  (r.v||[]).forEach((v,i)=>{const t=w[v.muro]&&w[v.muro].t;if(t!==null&&t!==undefined&&v.pos+v.an>t+S.p.tol)pend.push("Vano "+(i+1)+" ("+v.tipo+") excede la cota total de "+SIDES[v.muro]);});
   return{w,pct:Math.round(ok/tot*100),pend,c1,c2};
 }
 const colors={ok:"#1f8a4c",rev:"#c27a00",bad:"#c0392b"};
 function render(){
   renderReg();
-  $("#pNombre").value=S.p.n;$("#pInm").value=S.p.i;$("#pFecha").value=S.p.f;$("#tol").value=S.p.tol;
+  $("#pNombre").value=S.p.n;$("#pInm").value=S.p.i;$("#pFecha").value=S.p.f;$("#tol").value=S.p.tol;$("#norte").value=S.p.norte||"";
   $("#chips").innerHTML=S.r.map(r=>`<button class="chip ${r.id===S.cur?"on":""}" data-id="${r.id}">${esc(r.nombre)}${r.cerrado?" ✔":""}</button>`).join("");
   $("#emptyR").classList.toggle("hide",S.r.length>0);
   const r=cur();$("#rec").classList.toggle("hide",!r);if(!r)return;
@@ -235,33 +263,38 @@ function render(){
     const rect=w?`<rect x="${x}" y="${y-6}" width="${w}" height="12" rx="3" fill="${c}"/>`:`<rect x="${x-6}" y="${y}" width="12" height="${h}" rx="3" fill="${c}"/>`;
     const tx=w?x+w/2:(k==="O"?x-22:x+22),ty=w?(k==="N"?y-14:y+26):y+h/2+4;
     return rect+`<text x="${tx}" y="${ty}" text-anchor="middle" font-size="13" fill="#16252d">${k} ${a.w[k].t!==null?a.w[k].t.toFixed(2)+" m":""}${n?" 📷"+n:""}</text>`}).join("")+
-    `<text x="170" y="115" text-anchor="middle" font-size="14" fill="#5b6b73">${esc(r.nombre)}</text>`;
+    `<text x="170" y="115" text-anchor="middle" font-size="14" fill="#5b6b73">${esc(r.nombre)}</text><text x="170" y="135" text-anchor="middle" font-size="11" fill="#5b6b73">Norte: ${esc(S.p.norte||"sin definir")}</text>`;
   const lbl={ok:"OK",rev:"Revisar",bad:"Diferencia"};
-  $("#walls").innerHTML=Object.keys(SIDES).map(k=>{const m=r.m[k],s=a.w[k];
+  $("#walls").innerHTML=Object.keys(SIDES).map(k=>{const m=r.m[k],s=a.w[k],mk=x=>x?"✔":"✖";
     return`<div class="wall"><header><span>${SIDES[k]}</span><span class="st ${s.st}">${lbl[s.st]}</span></header>
-    <div class="row"><div><label>Cota total (m)</label><input data-k="${k}" data-f="total" inputmode="decimal" value="${esc(m.total)}"></div>
-    <div><label>Cotas parciales (m)</label><input data-k="${k}" data-f="parc" placeholder="1.20, 0.90, 1.50" value="${esc(m.parc)}"></div>
-    <div><label>Espesor (m)</label><input data-k="${k}" data-f="esp" inputmode="decimal" value="${esc(m.esp)}"></div>
-    <div><label>Altura (m)</label><input data-k="${k}" data-f="alt" inputmode="decimal" value="${esc(m.alt)}"></div></div>
+    <label style="display:flex;gap:8px;align-items:center;margin:4px 0"><input type="checkbox" style="width:auto" data-k="${k}" data-f="abierto" ${m.abierto?"checked":""}> Este lado es un vano abierto (no hay muro)</label>
+    ${m.abierto?`<label>Nota obligatoria</label><input data-k="${k}" data-f="nota" value="${esc(m.nota||"")}" placeholder="Ej. paso abierto hacia el patio">`:`<div class="row"><div><label>Cota total (m)</label><input data-k="${k}" data-f="total" inputmode="decimal" value="${esc(m.total||"")}"></div>
+    <div><label>Cotas parciales (m)</label><input data-k="${k}" data-f="parc" placeholder="1.20, 0.90, 1.50" value="${esc(m.parc||"")}"></div>
+    <div><label>Espesor (m)</label><input data-k="${k}" data-f="esp" inputmode="decimal" value="${esc(m.esp||"")}"></div>
+    <div><label>Altura (m)</label><input data-k="${k}" data-f="alt" inputmode="decimal" value="${esc(m.alt||"")}"></div></div>`}
+    <div class="msg" style="color:var(--mut)">Capturado ${mk(s.cap)} · Consistente ${mk(s.con)} · Suficiente ${mk(s.suf)}</div>
     <div class="msg ${s.st==="ok"?"ok":s.st}">${esc(s.msg)}</div></div>`}).join("");
+  const opts=Object.keys(SIDES).map(k=>`<option value="${k}">${SIDES[k]}</option>`).join("");
+  ["#vMuro","#swA"].forEach(i=>$(i).innerHTML=opts);$("#swB").innerHTML=opts;$("#swB").value="E";
+  $("#vList").innerHTML=(r.v||[]).map((v,i)=>`<div class="msg">${v.tipo} en ${SIDES[v.muro]}: desde ${v.pos.toFixed(2)} m, ancho ${v.an.toFixed(2)} m, altura ${v.al.toFixed(2)} m${v.tipo==="Ventana"&&v.ant!==null?", antepecho "+v.ant.toFixed(2)+" m":""} <button class="btn ghost" data-vr="${i}" style="padding:2px 8px">Quitar</button></div>`).join("");
   $("#closure").innerHTML=`<p class="msg ${a.c1==="ok"&&a.c2==="ok"?"ok":"rev"}">Cierre del polígono: norte–sur ${a.c1==="ok"?"coincide":"pendiente o no coincide"}; este–oeste ${a.c2==="ok"?"coincide":"pendiente o no coincide"}.</p>`;
   $("#fNodo").innerHTML=Object.keys(SIDES).map(k=>`<option value="${k}">${SIDES[k]}</option>`).join("");
   $("#photos").innerHTML=r.fotos.map((f,i)=>`<figure><img src="${f.src}" alt="Foto ${SIDES[f.nodo]}"><figcaption>${SIDES[f.nodo]}${f.nota?" – "+esc(f.nota):""}<br><button class="btn ghost" data-del="${i}" style="padding:2px 8px;font-size:.75rem">Quitar</button></figcaption></figure>`).join("");
   $("#bar").style.width=a.pct+"%";$("#barW").setAttribute("aria-valuenow",a.pct);$("#pct").textContent=a.pct+"%";
   $("#pend").innerHTML=a.pend.length?"<strong>Pendientes ("+a.pend.length+"):</strong><ul>"+a.pend.map(p=>"<li>"+esc(p)+"</li>").join("")+"</ul>":'<p class="msg ok">Todo completo. Ya puedes cerrar el recinto y salir de la obra.</p>';
-  $("#close").disabled=a.pct<100||r.cerrado;
-  $("#closeMsg").textContent=r.cerrado?"Recinto cerrado. La información está lista para gabinete.":(a.pct<100?"El recinto se habilita para cierre al llegar a 100%.":"");
+  $("#close").disabled=a.pend.length>0||r.cerrado;
+  $("#closeMsg").textContent=r.cerrado?"Recinto cerrado. La información está lista para gabinete.":(a.pend.length?"El recinto se habilita para cierre cuando no queden pendientes.":"");
 }
 // eventos
 $$("nav button").forEach(b=>b.onclick=()=>tab(b.dataset.tab));
 $$("[data-go]").forEach(b=>b.onclick=()=>tab(b.dataset.go));
 function tab(t){$$("section").forEach(s=>s.classList.toggle("on",s.id===t));$$("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t));window.scrollTo(0,0)}
-[["#pNombre","n"],["#pInm","i"],["#pFecha","f"]].forEach(([s,k])=>$(s).onchange=e=>{S.p[k]=e.target.value;save()});
+[["#pNombre","n"],["#pInm","i"],["#pFecha","f"],["#norte","norte"]].forEach(([s,k])=>$(s).onchange=e=>{S.p[k]=e.target.value;save()});
 $("#tol").onchange=e=>{S.p.tol=Math.max(0,num(e.target.value)||0.02);save();render()};
 $("#addR").onclick=()=>{const n=$("#rNombre").value.trim();if(!n){$("#rNombre").focus();return}
-  const id="r"+Date.now();S.r.push({id,nombre:n,m:{N:{},E:{},S:{},O:{}},fotos:[],cerrado:false});S.cur=id;$("#rNombre").value="";save();render()};
+  const id="r"+Date.now();S.r.push({id,nombre:n,m:{N:{},E:{},S:{},O:{}},fotos:[],v:[],cerrado:false});S.cur=id;$("#rNombre").value="";save();render()};
 $("#chips").onclick=e=>{const b=e.target.closest("[data-id]");if(b){S.cur=b.dataset.id;save();render()}};
-$("#walls").onchange=e=>{const i=e.target;if(!i.dataset.k)return;const r=cur();r.m[i.dataset.k][i.dataset.f]=i.value;r.cerrado=false;save();render()};
+$("#walls").onchange=e=>{const i=e.target;if(!i.dataset.k)return;const r=cur();r.m[i.dataset.k][i.dataset.f]=i.type==="checkbox"?i.checked:i.value;r.cerrado=false;save();render()};
 $("#fFile").onchange=e=>{const f=e.target.files[0],r=cur();if(!f||!r)return;
   const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,640/im.width),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;
     c.getContext("2d").drawImage(im,0,0,c.width,c.height);r.fotos.push({nodo:$("#fNodo").value,nota:$("#fNota").value.trim(),src:c.toDataURL("image/jpeg",.7)});
@@ -271,6 +304,7 @@ $("#close").onclick=()=>{cur().cerrado=true;save();render()};
 $("#reset").onclick=()=>{if(confirm("¿Borrar todo el levantamiento de este dispositivo?")){S={p:{n:"",i:"",f:"",tol:0.02},r:[],cur:null,reg:S.reg||[]};save();render()}};
 $("#csv").onclick=()=>{const L=[["Proyecto","Recinto","Muro","Total_m","Parciales_m","Suma_m","Espesor_m","Altura_m","Estado","Fotos"]];
   S.r.forEach(r=>{const a=analyze(r);Object.keys(SIDES).forEach(k=>{const m=r.m[k],s=a.w[k];L.push([S.p.n,r.nombre,SIDES[k],m.total||"",m.parc||"",s.sum.toFixed(2),m.esp||"",m.alt||"",s.st,r.fotos.filter(f=>f.nodo===k).length])})});
+  L.push([]);L.push(["Proyecto","Recinto","Vano","Tipo","Muro","Posicion_m","Ancho_m","Altura_m","Antepecho_m"]);S.r.forEach(r=>(r.v||[]).forEach((v,i)=>L.push([S.p.n,r.nombre,"V"+(i+1),v.tipo,SIDES[v.muro],v.pos,v.an,v.al,v.ant===null?"":v.ant])));
   const t=L.map(l=>l.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\n"),a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob(["\ufeff"+t],{type:"text/csv"}));a.download="levantamiento.csv";a.click()};
 // registros de pruebas
@@ -290,6 +324,21 @@ $("#regList").onclick=e=>{const d=e.target.closest("[data-ed]"),r=e.target.close
 $("#gCopy").onclick=()=>{const t=(S.reg||[]).slice().sort((a,b)=>a.cod.localeCompare(b.cod)).map(g=>g.cod+"\n"+Object.keys(GL).map(k=>GL[k]+": "+(g[k]||"—")).join("\n")).join("\n\n");
   if(!t){$("#gMsg").className="msg bad";$("#gMsg").textContent="No hay registros para copiar.";return}
   (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{$("#gMsg").className="msg ok";$("#gMsg").textContent="Copiado. Pégalo en tu documento de Word."}).catch(()=>{$("#gMsg").className="msg rev";$("#gMsg").textContent="No se pudo copiar automáticamente; selecciona el texto de los registros y cópialo a mano."})};
+// V1.0: vanos, orientación y casos de prueba
+$("#vAdd").onclick=()=>{const r=cur(),p=num($("#vPos").value),an=num($("#vAn").value),al=num($("#vAl").value);
+  if(p===null||p<0||!(an>0)||!(al>0)){$("#vMsg").className="msg bad";$("#vMsg").textContent="Falta posición, ancho o altura (ancho y altura mayores que cero).";return}
+  (r.v=r.v||[]).push({muro:$("#vMuro").value,tipo:$("#vTipo").value,pos:p,an,al,ant:num($("#vAnt").value)});
+  $("#vMsg").textContent="";["#vPos","#vAn","#vAl","#vAnt"].forEach(i=>$(i).value="");r.cerrado=false;save();render()};
+$("#vList").onclick=e=>{const b=e.target.closest("[data-vr]");if(b){const r=cur();r.v.splice(+b.dataset.vr,1);r.cerrado=false;save();render()}};
+$("#swBtn").onclick=()=>{const r=cur(),a=$("#swA").value,b=$("#swB").value;if(a===b)return;
+  [r.m[a],r.m[b]]=[r.m[b],r.m[a]];r.fotos.forEach(f=>{if(f.nodo===a)f.nodo=b;else if(f.nodo===b)f.nodo=a});
+  (r.v||[]).forEach(v=>{if(v.muro===a)v.muro=b;else if(v.muro===b)v.muro=a});r.cerrado=false;save();render()};
+const CASOS={
+ A:{n:"Prueba A – discrepancia",m:{N:{total:"4.00",parc:"1.20, 1.50, 1.25"}}},
+ B:{n:"Prueba B – coinciden, falta espesor",m:{N:{total:"4",parc:"1, 2, 1",alt:"2.6"}}},
+ C:{n:"Prueba C – ceros y vano abierto",m:{N:{total:"4",parc:"4",esp:"0.15",alt:"2.6"},S:{abierto:true,nota:"Paso abierto al patio"},E:{total:"0",parc:"0",esp:"0",alt:"0"},O:{total:"3",parc:"3",esp:"0.15",alt:"2.6"}}}};
+$$("[data-caso]").forEach(b=>b.onclick=()=>{const c=CASOS[b.dataset.caso],id="r"+Date.now();
+  S.r.push({id,nombre:c.n,m:Object.assign({N:{},E:{},S:{},O:{}},JSON.parse(JSON.stringify(c.m))),fotos:[],v:[],cerrado:false});S.cur=id;save();render()});
 render();
 </script>
 </body>
