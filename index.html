@@ -116,7 +116,7 @@ ul{padding-left:20px;margin:6px 0}
       <div style="align-self:end"><button class="btn" id="addR">Agregar recinto</button></div>
     </div>
     <div class="chips" id="chips" role="list"></div>
-    <div class="chips"><span style="align-self:center;font-size:.85rem;color:var(--mut)">Casos de prueba técnica:</span><button class="chip" data-caso="A">A · discrepancia</button><button class="chip" data-caso="B">B · falta espesor</button><button class="chip" data-caso="C">C · ceros y vano abierto</button></div>
+    <div class="chips"><span style="align-self:center;font-size:.85rem;color:var(--mut)">Casos de prueba técnica:</span><button class="chip" data-caso="A">A · discrepancia</button><button class="chip" data-caso="B">B · falta espesor</button><button class="chip" data-caso="C">C · ceros y vano abierto</button><button class="chip" data-caso="D">D · completo (solo faltan fotos)</button></div>
     <p class="msg" id="emptyR">Agrega tu primer recinto para empezar a registrar medidas.</p>
   </div>
 
@@ -137,7 +137,7 @@ ul{padding-left:20px;margin:6px 0}
 
     <div class="card">
       <h2>Puertas y ventanas (vanos)</h2>
-      <p style="color:var(--mut);font-size:.9rem;margin:0">Opcional. Cada puerta o ventana queda ligada a su muro. Posición = distancia desde la esquina donde empiezas a medir ese muro.</p>
+      <p style="color:var(--mut);font-size:.9rem;margin:0">Opcional. Cada puerta o ventana queda ligada a su muro. Posición = distancia desde la esquina oeste (muros norte y sur) o desde la esquina norte (muros este y oeste). El vano se dibuja solo en el croquis.</p>
       <div class="row">
         <div><label for="vMuro">Muro</label><select id="vMuro"></select></div>
         <div><label for="vTipo">Tipo</label><select id="vTipo"><option>Puerta</option><option>Ventana</option></select></div>
@@ -166,7 +166,7 @@ ul{padding-left:20px;margin:6px 0}
       <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="barW"><i id="bar"></i></div>
       <p><strong id="pct">0%</strong> de completitud</p>
       <div id="pend"></div>
-      <p><button class="btn acc" id="close">Cerrar recinto</button> <button class="btn ghost" id="csv">Exportar CSV</button> <button class="btn ghost" id="reset">Borrar todo</button></p>
+      <p><button class="btn acc" id="close">Cerrar recinto</button> <button class="btn ghost" id="csv">Exportar CSV</button> <button class="btn ghost" id="delR">Quitar este recinto</button> <button class="btn ghost" id="reset">Empezar de cero (borra todo)</button></p>
       <p class="msg" id="closeMsg"></p>
     </div>
   </div>
@@ -250,6 +250,12 @@ function analyze(r){
   return{w,pct:Math.round(ok/tot*100),pend,c1,c2};
 }
 const colors={ok:"#1f8a4c",rev:"#c27a00",bad:"#c0392b"};
+function vanosSvg(r,a){let o="";(r.v||[]).forEach((v,i)=>{const t=a.w[v.muro].t;if(!t||t<=0)return;
+  const f=v.pos/t,g=v.an/t,col=v.tipo==="Puerta"?"#f2b705":"#3b9bd6",lab=(v.tipo==="Puerta"?"P":"V")+(i+1);let x,y,w,h;
+  if(v.muro==="N"||v.muro==="S"){x=70+f*200;w=Math.max(10,g*200);y=(v.muro==="N"?30:190)-9;h=18}
+  else{y=50+f*120;h=Math.max(10,g*120);x=(v.muro==="O"?40:300)-9;w=18}
+  o+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="${col}" stroke="#16252d" stroke-width="1"/><text x="${x+w/2}" y="${y+h/2+3}" text-anchor="middle" font-size="9" fill="#16252d">${lab}</text>`});
+  return o+`<text x="170" y="213" text-anchor="middle" font-size="10" fill="#5b6b73">Amarillo: puerta · Azul: ventana</text>`}
 function render(){
   renderReg();
   $("#pNombre").value=S.p.n;$("#pInm").value=S.p.i;$("#pFecha").value=S.p.f;$("#tol").value=S.p.tol;$("#norte").value=S.p.norte||"";
@@ -264,6 +270,7 @@ function render(){
     const tx=w?x+w/2:(k==="O"?x-22:x+22),ty=w?(k==="N"?y-14:y+26):y+h/2+4;
     return rect+`<text x="${tx}" y="${ty}" text-anchor="middle" font-size="13" fill="#16252d">${k} ${a.w[k].t!==null?a.w[k].t.toFixed(2)+" m":""}${n?" 📷"+n:""}</text>`}).join("")+
     `<text x="170" y="115" text-anchor="middle" font-size="14" fill="#5b6b73">${esc(r.nombre)}</text><text x="170" y="135" text-anchor="middle" font-size="11" fill="#5b6b73">Norte: ${esc(S.p.norte||"sin definir")}</text>`;
+  $("#plan").innerHTML+=vanosSvg(r,a);
   const lbl={ok:"OK",rev:"Revisar",bad:"Diferencia"};
   $("#walls").innerHTML=Object.keys(SIDES).map(k=>{const m=r.m[k],s=a.w[k],mk=x=>x?"✔":"✖";
     return`<div class="wall"><header><span>${SIDES[k]}</span><span class="st ${s.st}">${lbl[s.st]}</span></header>
@@ -278,7 +285,7 @@ function render(){
   ["#vMuro","#swA"].forEach(i=>$(i).innerHTML=opts);$("#swB").innerHTML=opts;$("#swB").value="E";
   $("#vList").innerHTML=(r.v||[]).map((v,i)=>`<div class="msg">${v.tipo} en ${SIDES[v.muro]}: desde ${v.pos.toFixed(2)} m, ancho ${v.an.toFixed(2)} m, altura ${v.al.toFixed(2)} m${v.tipo==="Ventana"&&v.ant!==null?", antepecho "+v.ant.toFixed(2)+" m":""} <button class="btn ghost" data-vr="${i}" style="padding:2px 8px">Quitar</button></div>`).join("");
   $("#closure").innerHTML=`<p class="msg ${a.c1==="ok"&&a.c2==="ok"?"ok":"rev"}">Cierre del polígono: norte–sur ${a.c1==="ok"?"coincide":"pendiente o no coincide"}; este–oeste ${a.c2==="ok"?"coincide":"pendiente o no coincide"}.</p>`;
-  $("#fNodo").innerHTML=Object.keys(SIDES).map(k=>`<option value="${k}">${SIDES[k]}</option>`).join("");
+  {const fv=$("#fNodo").value;$("#fNodo").innerHTML=Object.keys(SIDES).map(k=>`<option value="${k}">${SIDES[k]}</option>`).join("");if(fv)$("#fNodo").value=fv}
   $("#photos").innerHTML=r.fotos.map((f,i)=>`<figure><img src="${f.src}" alt="Foto ${SIDES[f.nodo]}"><figcaption>${SIDES[f.nodo]}${f.nota?" – "+esc(f.nota):""}<br><button class="btn ghost" data-del="${i}" style="padding:2px 8px;font-size:.75rem">Quitar</button></figcaption></figure>`).join("");
   $("#bar").style.width=a.pct+"%";$("#barW").setAttribute("aria-valuenow",a.pct);$("#pct").textContent=a.pct+"%";
   $("#pend").innerHTML=a.pend.length?"<strong>Pendientes ("+a.pend.length+"):</strong><ul>"+a.pend.map(p=>"<li>"+esc(p)+"</li>").join("")+"</ul>":'<p class="msg ok">Todo completo. Ya puedes cerrar el recinto y salir de la obra.</p>';
@@ -334,11 +341,13 @@ $("#swBtn").onclick=()=>{const r=cur(),a=$("#swA").value,b=$("#swB").value;if(a=
   [r.m[a],r.m[b]]=[r.m[b],r.m[a]];r.fotos.forEach(f=>{if(f.nodo===a)f.nodo=b;else if(f.nodo===b)f.nodo=a});
   (r.v||[]).forEach(v=>{if(v.muro===a)v.muro=b;else if(v.muro===b)v.muro=a});r.cerrado=false;save();render()};
 const CASOS={
+ D:{n:"Prueba D – completo, faltan fotos",m:{N:{total:"4",parc:"1, 0.9, 2.1",esp:"0.15",alt:"2.6"},S:{total:"4",parc:"4",esp:"0.15",alt:"2.6"},E:{total:"3",parc:"1, 1.2, 0.8",esp:"0.15",alt:"2.6"},O:{total:"3",parc:"3",esp:"0.15",alt:"2.6"}},v:[{muro:"N",tipo:"Puerta",pos:1,an:0.9,al:2.1,ant:null},{muro:"E",tipo:"Ventana",pos:1,an:1.2,al:1.1,ant:0.9}]},
  A:{n:"Prueba A – discrepancia",m:{N:{total:"4.00",parc:"1.20, 1.50, 1.25"}}},
  B:{n:"Prueba B – coinciden, falta espesor",m:{N:{total:"4",parc:"1, 2, 1",alt:"2.6"}}},
  C:{n:"Prueba C – ceros y vano abierto",m:{N:{total:"4",parc:"4",esp:"0.15",alt:"2.6"},S:{abierto:true,nota:"Paso abierto al patio"},E:{total:"0",parc:"0",esp:"0",alt:"0"},O:{total:"3",parc:"3",esp:"0.15",alt:"2.6"}}}};
 $$("[data-caso]").forEach(b=>b.onclick=()=>{const c=CASOS[b.dataset.caso],id="r"+Date.now();
-  S.r.push({id,nombre:c.n,m:Object.assign({N:{},E:{},S:{},O:{}},JSON.parse(JSON.stringify(c.m))),fotos:[],v:[],cerrado:false});S.cur=id;save();render()});
+  S.r.push({id,nombre:c.n,m:Object.assign({N:{},E:{},S:{},O:{}},JSON.parse(JSON.stringify(c.m))),fotos:[],v:JSON.parse(JSON.stringify(c.v||[])),cerrado:false});S.cur=id;save();render()});
+$("#delR").onclick=()=>{const r=cur();if(!r||!confirm("¿Quitar el recinto «"+r.nombre+"»? Las demás pruebas no se tocan."))return;S.r=S.r.filter(x=>x.id!==r.id);S.cur=S.r.length?S.r[0].id:null;save();render()};
 render();
 </script>
 </body>
